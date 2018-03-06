@@ -17,6 +17,10 @@ import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.ItemizedIconOverlay;
+import org.osmdroid.views.overlay.OverlayItem;
+
+import java.util.ArrayList;
 
 import static com.perezjquim.noallerg.util.UI.toast;
 
@@ -26,11 +30,14 @@ public class MainActivity extends AppCompatActivity
     private IMapController mapController;
     private PermissionChecker permissionChecker;
     private SharedPreferencesHelper prefs;
-    private static final double MAP_DEFAULT_ZOOM = 10.0;
-    private static final double MAP_MIN_ZOOM = 2.0;
+    private static final double MAP_DEFAULT_LAT = 39;
+    private static final double MAP_DEFAULT_LONG = -8;
+    private static final double MAP_DEFAULT_ZOOM = 15.0;
+    private static final double MAP_MIN_ZOOM = 4.0;
     private static final String PREFS_COORDS = "coords";
     private static final String PREFS_COORDS_LAT ="lat";
     private static final String PREFS_COORDS_LONG = "long";
+    private static final String PREFS_COORDS_ZOOM = "zoom";
 
     @Override
     public void onCreate(Bundle savedInstance)
@@ -60,6 +67,12 @@ public class MainActivity extends AppCompatActivity
         map.setMinZoomLevel(MAP_MIN_ZOOM);
         mapController = map.getController();
         loadPreviousCoordinates();
+        addMarker("",38,-77);
+        addMarker("",51,-0.1);
+        addMarker("", 52,13);
+
+
+
     }
 
     @Override
@@ -115,7 +128,7 @@ public class MainActivity extends AppCompatActivity
                 {
                     if (coordinates != null)
                     {
-                        moveTo(coordinates.getLatitude(), coordinates.getLongitude());
+                        moveTo(coordinates.getLatitude(), coordinates.getLongitude(),MAP_DEFAULT_ZOOM);
                     }
                     else
                     {
@@ -129,9 +142,14 @@ public class MainActivity extends AppCompatActivity
         toast(this,"refresh");
     }
 
+    private void moveTo(double latitude, double longitude, double zoom)
+    {
+        mapController.setZoom(zoom);
+        moveTo(latitude,longitude);
+    }
+
     private void moveTo(double latitude, double longitude)
     {
-        mapController.setZoom(MAP_DEFAULT_ZOOM);
         mapController.animateTo(new GeoPoint(latitude,longitude));
     }
 
@@ -139,18 +157,36 @@ public class MainActivity extends AppCompatActivity
     {
         prefs.setString(PREFS_COORDS,PREFS_COORDS_LAT,""+map.getMapCenter().getLatitude());
         prefs.setString(PREFS_COORDS,PREFS_COORDS_LONG,""+map.getMapCenter().getLongitude());
+        prefs.setString(PREFS_COORDS,PREFS_COORDS_ZOOM,""+map.getZoomLevelDouble());
     }
 
     private void loadPreviousCoordinates()
     {
         String sLatitude = prefs.getString(PREFS_COORDS,PREFS_COORDS_LAT);
         String sLongitude = prefs.getString(PREFS_COORDS,PREFS_COORDS_LONG);
+        String sZoom = prefs.getString(PREFS_COORDS,PREFS_COORDS_ZOOM);
 
-        if(sLatitude != null && sLongitude != null)
+        if(sLatitude != null && sLongitude != null && sZoom != null)
         {
             double dLatitude = Double.parseDouble(sLatitude);
             double dLongitude = Double.parseDouble(sLongitude);
-            moveTo(dLatitude,dLongitude);
+            double dZoom = Double.parseDouble(sZoom);
+            moveTo(dLatitude,dLongitude,dZoom);
         }
+        else
+        {
+            moveTo(MAP_DEFAULT_LAT,MAP_DEFAULT_LONG,MAP_DEFAULT_ZOOM);
+        }
+    }
+
+    private void addMarker(String title, double latitude, double longitude)
+    {
+        ArrayList<OverlayItem> item = new ArrayList<>();
+        item.add(new OverlayItem(
+                title, "", new GeoPoint(latitude, longitude)));
+        ItemizedIconOverlay<OverlayItem> overlay
+                = new ItemizedIconOverlay<>(
+                this, item, null);
+        map.getOverlays().add(overlay);
     }
 }

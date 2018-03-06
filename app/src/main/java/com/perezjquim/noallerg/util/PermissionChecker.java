@@ -45,8 +45,9 @@ public class PermissionChecker
 
     private void goToSettings()
     {
-        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                Uri.fromParts("package", context.getPackageName(), null));
+        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        Uri uri =  Uri.fromParts("package", context.getPackageName(), null);
+        intent.setData(uri);
         ((Activity)context).startActivityForResult(intent,REQUEST_CODE);
         toast(context,"Enable all permissions to continue");
     }
