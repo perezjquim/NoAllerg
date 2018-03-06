@@ -1,14 +1,11 @@
 package com.perezjquim.noallerg;
 
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.provider.Settings;
-
-import com.perezjquim.noallerg.util.CyclicThread;
 
 import static com.perezjquim.noallerg.util.UI.toast;
 
@@ -18,6 +15,7 @@ public class PermissionChecker
     private CheckThread thread;
     private String[] permissions;
     private static final int GRANTED = PackageManager.PERMISSION_GRANTED;
+    public static final int REQUEST_CODE = 1;
 
     public PermissionChecker(Context context)
     {
@@ -30,19 +28,18 @@ public class PermissionChecker
         }
         catch (PackageManager.NameNotFoundException e)
         { e.printStackTrace(); }
-    }
 
-    public void check()
-    {
-        if(!isAllPermissionsChecked())
-        {
-            goToSettings();
-        }
+        thread = new CheckThread();
     }
 
     public void start()
     {
-        thread = new CheckThread(1000);
+        thread.start();
+    }
+
+    public void restart()
+    {
+        thread = new CheckThread();
         thread.start();
     }
 
@@ -50,9 +47,8 @@ public class PermissionChecker
     {
         Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
                 Uri.fromParts("package", context.getPackageName(), null));
-        ((Activity)context).startActivityForResult(intent,0);
+        ((Activity)context).startActivityForResult(intent,REQUEST_CODE);
         toast(context,"Enable all permissions to continue");
-        thread.kill();
     }
 
     private boolean isPermissionChecked(String permission)
@@ -70,20 +66,18 @@ public class PermissionChecker
         return true;
     }
 
-
-    private class CheckThread extends CyclicThread
+    private class CheckThread extends Thread
     {
-        public CheckThread()
+        public void run()
         {
-            super();
-        }
-        public CheckThread(int sampling)
-        {
-            super(sampling);
-        }
-        public void iteration()
-        {
-            check();
+            while(isAllPermissionsChecked())
+            {
+                try
+                { Thread.sleep(1000); }
+                catch (InterruptedException e)
+                { e.printStackTrace(); }
+            }
+            goToSettings();
         }
     }
 }

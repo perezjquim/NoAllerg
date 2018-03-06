@@ -5,8 +5,6 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.annotation.Nullable;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
@@ -27,12 +25,22 @@ public class MainActivity extends AppCompatActivity
     private static final double MAP_MIN_ZOOM = 2.0;
 
     @Override
-    public void onCreate(Bundle savedInstance) {
+    public void onCreate(Bundle savedInstance)
+    {
         super.onCreate(savedInstance);
+        initPermissionChecker();
         Configuration.getInstance().load(getApplicationContext(), PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
         setContentView(R.layout.activity_main);
-
         initMap();
+    }
+
+    private void initPermissionChecker()
+    {
+        if (Build.VERSION.SDK_INT >= 23)
+        {
+            permissionChecker = new PermissionChecker(this);
+            permissionChecker.start();
+        }
     }
 
     private void initMap()
@@ -43,26 +51,18 @@ public class MainActivity extends AppCompatActivity
         map.setMinZoomLevel(MAP_MIN_ZOOM);
         map.getController().setZoom(MAP_DEFAULT_ZOOM);
         map.getController().animateTo(new GeoPoint(39.0,-8.0));
-        goCurrent();
     }
 
     @Override
-    protected void onPostCreate(@Nullable Bundle savedInstanceState)
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
     {
-        super.onPostCreate(savedInstanceState);
-        if(Build.VERSION.SDK_INT >= 23)
+        super.onActivityResult(requestCode, resultCode, data);
+        switch(requestCode)
         {
-            permissionChecker = new PermissionChecker(this);
-            permissionChecker.start();
+            case PermissionChecker.REQUEST_CODE:
+                permissionChecker.restart();
         }
     }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        permissionChecker.start();
-    }
-
 
     @Override
     public void onResume()
@@ -96,11 +96,13 @@ public class MainActivity extends AppCompatActivity
                 {
                     if (coordinates != null)
                     {
-                        map.getController().setZoom(10.0);
-                        map.getController().animateTo(new GeoPoint(coordinates.getLatitude(),coordinates.getLongitude()));
+                        map.getController().setZoom(MAP_DEFAULT_ZOOM);
+                        map.getController().animateTo(new GeoPoint(coordinates.getLatitude(), coordinates.getLongitude()));
                     }
                     else
-                    { toast(this,"An error ocurred (check if GPS is enabled)."); }
+                    {
+                        toast(this, "An error ocurred (check if GPS is enabled).");
+                    }
                 });
     }
 
