@@ -6,19 +6,36 @@
     android:layout_height="match_parent"
     tools:context="com.perezjquim.noallerg.MainActivity">
 
-    <org.osmdroid.views.MapView
-        android:id="@+id/map"
+    <android.support.v4.widget.SwipeRefreshLayout
+        android:layout_height="wrap_content"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:id="@+id/refresh">
+
+        <org.osmdroid.views.MapView
+            android:id="@+id/map"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </android.support.v4.widget.SwipeRefreshLayout>
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab"
+        android:id="@+id/btnCurr"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end|bottom"
         android:layout_margin="20dp"
         android:tint="@android:color/background_light"
-        app:srcCompat="@android:drawable/ic_input_add"
+        app:srcCompat="@android:drawable/ic_menu_mylocation"
         android:onClick="goCurrent"/>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/btnRefresh"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start|bottom"
+        android:layout_margin="20dp"
+        android:onClick="refreshPoints"
+        android:tint="@android:color/background_light"
+        app:srcCompat="@drawable/quantum_ic_refresh_white_24" />
 
 </android.support.design.widget.CoordinatorLayout>
