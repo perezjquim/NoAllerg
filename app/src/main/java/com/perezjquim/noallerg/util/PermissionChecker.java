@@ -1,4 +1,4 @@
-package com.perezjquim.noallerg;
+package com.perezjquim.noallerg.util;
 
 import android.app.Activity;
 import android.content.Context;
