@@ -18,6 +18,7 @@
         android:layout_gravity="end|bottom"
         android:layout_margin="20dp"
         android:tint="@android:color/background_light"
-        app:srcCompat="@android:drawable/ic_input_add" />
+        app:srcCompat="@android:drawable/ic_input_add"
+        android:onClick="goCurrent"/>
 
 </android.support.design.widget.CoordinatorLayout>
