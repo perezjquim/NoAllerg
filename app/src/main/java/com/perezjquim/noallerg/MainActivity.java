@@ -8,8 +8,13 @@ import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.perezjquim.noallerg.util.HttpGetRequest;
 import com.perezjquim.noallerg.util.PermissionChecker;
 import com.perezjquim.noallerg.util.SharedPreferencesHelper;
 
@@ -38,6 +43,7 @@ public class MainActivity extends AppCompatActivity
     private static final String PREFS_COORDS_LAT ="lat";
     private static final String PREFS_COORDS_LONG = "long";
     private static final String PREFS_COORDS_ZOOM = "zoom";
+    private RequestQueue queue;
 
     @Override
     public void onCreate(Bundle savedInstance)
@@ -48,6 +54,7 @@ public class MainActivity extends AppCompatActivity
         prefs = new SharedPreferencesHelper(this);
         setContentView(R.layout.activity_main);
         initMap();
+        queue = Volley.newRequestQueue(getApplicationContext());
     }
 
     private void initPermissionChecker()
@@ -140,6 +147,11 @@ public class MainActivity extends AppCompatActivity
     public void refreshPoints(View v)
     {
         toast(this,"refresh");
+        HttpGetRequest request = new HttpGetRequest("http://www.noallerg.x10host.com/markers.php/",
+                response -> System.out.println(response.toString()),
+                error -> System.err.println(error.toString()),
+                queue
+        );
     }
 
     private void moveTo(double latitude, double longitude, double zoom)

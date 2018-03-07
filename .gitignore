@@ -1,4 +1,6 @@
 *.iml
+*.mwb
+*.mwb.bak
 .gradle
 /local.properties
 /.idea/workspace.xml
