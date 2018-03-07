@@ -2,6 +2,7 @@ package com.perezjquim.noallerg;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.database.sqlite.SQLiteStatement;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -12,7 +13,7 @@ import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
-import com.perezjquim.noallerg.util.DatabaseManager;
+import com.perezjquim.noallerg.db.DatabaseManager;
 import com.perezjquim.noallerg.util.Http;
 import com.perezjquim.noallerg.util.PermissionChecker;
 import com.perezjquim.noallerg.util.SharedPreferencesHelper;
@@ -143,14 +144,18 @@ public class MainActivity extends AppCompatActivity
 
     public void refreshPoints(View v)
     {
-        toast(this,"refresh");
+        toast(this,"Refreshing data..");
         Http.doGetRequest("http://www.noallerg.x10host.com/markers.php/",
                 response ->
                 {
                     DatabaseManager.clearDatabase();
                     placeMarkers(response);
                 },
-                error -> System.err.println(error.toString()),
+                error ->
+                {
+                    System.err.println(error.toString());
+                    toast(this,"An error occurred (make sure you have an internet connection)");
+                },
                 queue
         );
     }
