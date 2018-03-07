@@ -77,12 +77,6 @@ public class MainActivity extends AppCompatActivity
         map.setMinZoomLevel(MAP_MIN_ZOOM);
         mapController = map.getController();
         loadPreviousCoordinates();
-        addMarker("",38,-77);
-        addMarker("",51,-0.1);
-        addMarker("", 52,13);
-
-
-
     }
 
     @Override
@@ -151,7 +145,11 @@ public class MainActivity extends AppCompatActivity
     {
         toast(this,"refresh");
         Http.doGetRequest("http://www.noallerg.x10host.com/markers.php/",
-                response -> placeMarkers(response),
+                response ->
+                {
+                    DatabaseManager.clearDatabase();
+                    placeMarkers(response);
+                },
                 error -> System.err.println(error.toString()),
                 queue
         );
@@ -193,7 +191,6 @@ public class MainActivity extends AppCompatActivity
             moveTo(MAP_DEFAULT_LAT,MAP_DEFAULT_LONG,MAP_DEFAULT_ZOOM);
         }
     }
-
     private void addMarker(String title, double latitude, double longitude)
     {
         ArrayList<OverlayItem> item = new ArrayList<>();
@@ -215,6 +212,14 @@ public class MainActivity extends AppCompatActivity
             try
             {
                 JSONObject marker = markers.getJSONObject(i);
+
+                String title = marker.getString("title");
+                String subtitle = marker.getString("subtitle");
+                double latitude = marker.getDouble("lat");
+                double longitude = marker.getDouble("long");
+
+                DatabaseManager.insertMarker(title,subtitle,latitude,longitude);
+
                 items.add(new OverlayItem("(WIP title)","(WIP subtitle)",
                         new GeoPoint(marker.getDouble("lat"),marker.getDouble("long"))));
             }
