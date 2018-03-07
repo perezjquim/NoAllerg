@@ -77,6 +77,7 @@ public class MainActivity extends AppCompatActivity
         map.setMultiTouchControls(true);
         map.setMinZoomLevel(MAP_MIN_ZOOM);
         mapController = map.getController();
+        mapController.stopPanning();
         loadPreviousCoordinates();
         loadPreviousMarkers();
     }
@@ -128,38 +129,45 @@ public class MainActivity extends AppCompatActivity
     @SuppressLint("MissingPermission")
     public void goCurrent(View v)
     {
-        FusedLocationProviderClient location = LocationServices.getFusedLocationProviderClient(this);
-        location.getLastLocation()
-                .addOnSuccessListener(this, coordinates ->
-                {
-                    if (coordinates != null)
+        new Thread(()->
+        {
+            FusedLocationProviderClient location = LocationServices.getFusedLocationProviderClient(this);
+            location.getLastLocation()
+                    .addOnSuccessListener(this, coordinates ->
                     {
-                        moveTo(coordinates.getLatitude(), coordinates.getLongitude(),MAP_DEFAULT_ZOOM);
-                    }
-                    else
-                    {
-                        toast(this, "An error ocurred (check if GPS is enabled).");
-                    }
-                });
+                        if (coordinates != null)
+                        {
+                            moveTo(coordinates.getLatitude(), coordinates.getLongitude(),MAP_DEFAULT_ZOOM);
+                        }
+                        else
+                        {
+                            toast(this, "An error occured (make sure GPS is enabled)");
+                        }
+                    });
+        }).start();
     }
 
     public void refreshPoints(View v)
     {
-        toast(this,"Refreshing data..");
-        Http.doGetRequest("http://www.noallerg.x10host.com/markers.php/",
-                response ->
-                {
-                    DatabaseManager.clearDatabase();
-                    placeMarkers(response);
-                    toast(this,"Done refreshing!");
-                },
-                error ->
-                {
-                    System.err.println(error.toString());
-                    toast(this,"An error occurred (make sure you have an internet connection)");
-                },
-                queue
-        );
+        new Thread(()->
+        {
+            toast(this,"Refreshing data..");
+            Http.doGetRequest("http://www.noallerg.x10host.com/markers.php/",
+                    response ->
+                    {
+                        DatabaseManager.clearDatabase();
+                        placeMarkers(response);
+                        mapController.setZoom(map.getZoomLevelDouble());
+                        toast(this,"Done refreshing!");
+                    },
+                    error ->
+                    {
+                        System.err.println(error.toString());
+                        toast(this,"An error occured (make sure you have an internet connection)");
+                    },
+                    queue
+            );
+        }).start();
     }
 
     private void moveTo(double latitude, double longitude, double zoom)
