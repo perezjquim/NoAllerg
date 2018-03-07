@@ -8,16 +8,17 @@ import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
-import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
-import com.perezjquim.noallerg.util.HttpGetRequest;
+import com.perezjquim.noallerg.util.Http;
 import com.perezjquim.noallerg.util.PermissionChecker;
 import com.perezjquim.noallerg.util.SharedPreferencesHelper;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
 import org.osmdroid.util.GeoPoint;
@@ -147,8 +148,8 @@ public class MainActivity extends AppCompatActivity
     public void refreshPoints(View v)
     {
         toast(this,"refresh");
-        HttpGetRequest request = new HttpGetRequest("http://www.noallerg.x10host.com/markers.php/",
-                response -> System.out.println(response.toString()),
+        Http.doGetRequest("http://www.noallerg.x10host.com/markers.php/",
+                response -> placeMarkers(response),
                 error -> System.err.println(error.toString()),
                 queue
         );
@@ -199,6 +200,31 @@ public class MainActivity extends AppCompatActivity
         ItemizedIconOverlay<OverlayItem> overlay
                 = new ItemizedIconOverlay<>(
                 this, item, null);
+        map.getOverlays().add(overlay);
+    }
+
+    private void placeMarkers(JSONArray markers)
+    {
+        map.getOverlays().clear();
+        ArrayList<OverlayItem> items = new ArrayList<>();
+
+        for(int i = 0; i < markers.length(); i++)
+        {
+            try
+            {
+                JSONObject marker = markers.getJSONObject(i);
+                items.add(new OverlayItem("(WIP title)","(WIP subtitle)",
+                        new GeoPoint(marker.getDouble("lat"),marker.getDouble("long"))));
+            }
+            catch (JSONException e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+        ItemizedIconOverlay<OverlayItem> overlay
+                = new ItemizedIconOverlay<>(
+                this, items, null);
         map.getOverlays().add(overlay);
     }
 }
