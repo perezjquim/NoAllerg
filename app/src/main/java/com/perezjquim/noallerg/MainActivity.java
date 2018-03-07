@@ -2,7 +2,7 @@ package com.perezjquim.noallerg;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.database.sqlite.SQLiteStatement;
+import android.database.Cursor;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -78,6 +78,7 @@ public class MainActivity extends AppCompatActivity
         map.setMinZoomLevel(MAP_MIN_ZOOM);
         mapController = map.getController();
         loadPreviousCoordinates();
+        loadPreviousMarkers();
     }
 
     @Override
@@ -150,6 +151,7 @@ public class MainActivity extends AppCompatActivity
                 {
                     DatabaseManager.clearDatabase();
                     placeMarkers(response);
+                    toast(this,"Done refreshing!");
                 },
                 error ->
                 {
@@ -196,14 +198,24 @@ public class MainActivity extends AppCompatActivity
             moveTo(MAP_DEFAULT_LAT,MAP_DEFAULT_LONG,MAP_DEFAULT_ZOOM);
         }
     }
-    private void addMarker(String title, double latitude, double longitude)
+
+    private void loadPreviousMarkers()
     {
-        ArrayList<OverlayItem> item = new ArrayList<>();
-        item.add(new OverlayItem(
-                title, "", new GeoPoint(latitude, longitude)));
+        ArrayList<OverlayItem> items = new ArrayList<>();
+        Cursor markers = DatabaseManager.getMarkers();
+        while(markers.moveToNext())
+        {
+            String title = markers.getString(0);
+            String subtitle = markers.getString(1);
+            double latitude = markers.getDouble(2);
+            double longitude = markers.getDouble(3);
+
+            items.add(new OverlayItem(title,subtitle,
+                    new GeoPoint(latitude,longitude)));
+        }
         ItemizedIconOverlay<OverlayItem> overlay
                 = new ItemizedIconOverlay<>(
-                this, item, null);
+                this, items, null);
         map.getOverlays().add(overlay);
     }
 
@@ -225,8 +237,8 @@ public class MainActivity extends AppCompatActivity
 
                 DatabaseManager.insertMarker(title,subtitle,latitude,longitude);
 
-                items.add(new OverlayItem("(WIP title)","(WIP subtitle)",
-                        new GeoPoint(marker.getDouble("lat"),marker.getDouble("long"))));
+                items.add(new OverlayItem(title,subtitle,
+                        new GeoPoint(latitude,longitude)));
             }
             catch (JSONException e)
             {

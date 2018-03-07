@@ -1,9 +1,9 @@
 package com.perezjquim.noallerg.db;
 
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.os.Environment;
-import android.util.Log;
 
 import java.io.File;
 
@@ -99,5 +99,10 @@ public abstract class DatabaseManager
         long state = statement.executeInsert();
         if (state == -1)
             throw new InsertFailedException(args);
+    }
+
+    public static Cursor getMarkers()
+    {
+        return db.rawQuery("SELECT title,subtitle,lat,long FROM marker_coor,marker_info WHERE marker_coor.marker_id=marker_info.marker_id",null);
     }
 }
