@@ -12,6 +12,7 @@ import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.perezjquim.noallerg.util.DatabaseManager;
 import com.perezjquim.noallerg.util.Http;
 import com.perezjquim.noallerg.util.PermissionChecker;
 import com.perezjquim.noallerg.util.SharedPreferencesHelper;
@@ -51,11 +52,12 @@ public class MainActivity extends AppCompatActivity
     {
         super.onCreate(savedInstance);
         initPermissionChecker();
+        DatabaseManager.initDatabase();
         Configuration.getInstance().load(getApplicationContext(), PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
         prefs = new SharedPreferencesHelper(this);
         setContentView(R.layout.activity_main);
         initMap();
-        queue = Volley.newRequestQueue(getApplicationContext());
+        queue = Volley.newRequestQueue(this);
     }
 
     private void initPermissionChecker()
