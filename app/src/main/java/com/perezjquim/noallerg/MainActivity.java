@@ -25,7 +25,7 @@ import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
-import org.osmdroid.views.overlay.ItemizedIconOverlay;
+import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.OverlayItem;
 
 import java.util.ArrayList;
@@ -77,7 +77,6 @@ public class MainActivity extends AppCompatActivity
         map.setMultiTouchControls(true);
         map.setMinZoomLevel(MAP_MIN_ZOOM);
         mapController = map.getController();
-        mapController.stopPanning();
         loadPreviousCoordinates();
         loadPreviousMarkers();
     }
@@ -157,7 +156,7 @@ public class MainActivity extends AppCompatActivity
                     {
                         DatabaseManager.clearDatabase();
                         placeMarkers(response);
-                        mapController.setZoom(map.getZoomLevelDouble());
+                        map.invalidate();
                         toast(this,"Done refreshing!");
                     },
                     error ->
@@ -218,20 +217,22 @@ public class MainActivity extends AppCompatActivity
             double latitude = markers.getDouble(2);
             double longitude = markers.getDouble(3);
 
-            items.add(new OverlayItem(title,subtitle,
-                    new GeoPoint(latitude,longitude)));
+            placeMarker(title,subtitle,latitude,longitude);
         }
-        ItemizedIconOverlay<OverlayItem> overlay
-                = new ItemizedIconOverlay<>(
-                this, items, null);
-        map.getOverlays().add(overlay);
+    }
+
+    private void placeMarker(String title, String subtitle, double latitude, double longitude)
+    {
+        Marker m = new Marker(map);
+        m.setPosition(new GeoPoint(latitude,longitude));
+        m.setTitle(title);
+        m.setSubDescription(subtitle);
+        map.getOverlays().add(m);
     }
 
     private void placeMarkers(JSONArray markers)
     {
         map.getOverlays().clear();
-        ArrayList<OverlayItem> items = new ArrayList<>();
-
         for(int i = 0; i < markers.length(); i++)
         {
             try
@@ -244,19 +245,12 @@ public class MainActivity extends AppCompatActivity
                 double longitude = marker.getDouble("longitude");
 
                 DatabaseManager.insertMarker(title,subtitle,latitude,longitude);
-
-                items.add(new OverlayItem(title,subtitle,
-                        new GeoPoint(latitude,longitude)));
+                placeMarker(title,subtitle,latitude,longitude);
             }
             catch (JSONException e)
             {
                 e.printStackTrace();
             }
         }
-
-        ItemizedIconOverlay<OverlayItem> overlay
-                = new ItemizedIconOverlay<>(
-                this, items, null);
-        map.getOverlays().add(overlay);
     }
 }
