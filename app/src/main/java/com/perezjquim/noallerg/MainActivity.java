@@ -38,10 +38,14 @@ public class MainActivity extends AppCompatActivity
     private IMapController mapController;
     private PermissionChecker permissionChecker;
     private SharedPreferencesHelper prefs;
+
+    // Constantes (Mapa)
     private static final double MAP_DEFAULT_LAT = 39;
     private static final double MAP_DEFAULT_LONG = -8;
     private static final double MAP_DEFAULT_ZOOM = 15.0;
     private static final double MAP_MIN_ZOOM = 4.0;
+
+    // Constantes (SharedPreferences)
     private static final String PREFS_COORDS = "coords";
     private static final String PREFS_COORDS_LAT ="lat";
     private static final String PREFS_COORDS_LONG = "long";
@@ -55,7 +59,6 @@ public class MainActivity extends AppCompatActivity
         initPermissionChecker();
         DatabaseManager.initDatabase();
         Configuration.getInstance().load(getApplicationContext(), PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
-        prefs = new SharedPreferencesHelper(this);
         setContentView(R.layout.activity_main);
         initMap();
         queue = Volley.newRequestQueue(this);
@@ -72,12 +75,18 @@ public class MainActivity extends AppCompatActivity
 
     private void initMap()
     {
+        // Inicialização do mapa e as suas configurações
+        prefs = new SharedPreferencesHelper(this);     
         map = findViewById(R.id.map);
         map.setBuiltInZoomControls(false);
         map.setMultiTouchControls(true);
         map.setMinZoomLevel(MAP_MIN_ZOOM);
         mapController = map.getController();
+
+        // O mapa é posicionado nas coordenadas da sessão anterior
         loadPreviousCoordinates();
+
+        // Os marcadores são recarregados para o mapa
         loadPreviousMarkers();
     }
 
@@ -108,6 +117,7 @@ public class MainActivity extends AppCompatActivity
         Configuration.getInstance().save(getApplicationContext(), PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
         if (map != null)
             map.onPause();
+        // As coordenadas são guardadas
         saveCoordinates();
     }
 
@@ -115,6 +125,7 @@ public class MainActivity extends AppCompatActivity
     public void onDestroy()
     {
         super.onDestroy();
+        // As coordenadas são guardadas        
         saveCoordinates();
     }
 
@@ -122,6 +133,7 @@ public class MainActivity extends AppCompatActivity
     public void onStop()
     {
         super.onStop();
+        // As coordenadas são guardadas   
         saveCoordinates();
     }
 
@@ -130,6 +142,7 @@ public class MainActivity extends AppCompatActivity
     {
         new Thread(()->
         {
+            // Busca a localização atual e move o mapa para tal
             FusedLocationProviderClient location = LocationServices.getFusedLocationProviderClient(this);
             location.getLastLocation()
                     .addOnSuccessListener(this, coordinates ->
@@ -151,6 +164,7 @@ public class MainActivity extends AppCompatActivity
         new Thread(()->
         {
             toast(this,"Refreshing data..");
+            // Atualiza os marcadores
             Http.doGetRequest("http://www.noallerg.x10host.com/markers.php/",
                     response ->
                     {
@@ -189,27 +203,36 @@ public class MainActivity extends AppCompatActivity
 
     private void loadPreviousCoordinates()
     {
+        // Busca as coordenadas armazenadas no SharedPreferences
         String sLatitude = prefs.getString(PREFS_COORDS,PREFS_COORDS_LAT);
         String sLongitude = prefs.getString(PREFS_COORDS,PREFS_COORDS_LONG);
         String sZoom = prefs.getString(PREFS_COORDS,PREFS_COORDS_ZOOM);
 
+        // Caso existam coordenadas anteriores
         if(sLatitude != null && sLongitude != null && sZoom != null)
         {
+            // O mapa é movido para tais coordenadas
             double dLatitude = Double.parseDouble(sLatitude);
             double dLongitude = Double.parseDouble(sLongitude);
             double dZoom = Double.parseDouble(sZoom);
             moveTo(dLatitude,dLongitude,dZoom);
         }
+
+        // Caso não existam coordenadas anteriores
+        // (ex.: a primeira vez em que a aplicação é executada)
         else
         {
+            // O mapa é movido para umas coordenadas predefinidas
             moveTo(MAP_DEFAULT_LAT,MAP_DEFAULT_LONG,MAP_DEFAULT_ZOOM);
         }
     }
 
     private void loadPreviousMarkers()
     {
-        ArrayList<OverlayItem> items = new ArrayList<>();
+        // Busca os markers à base de dados (local)
         Cursor markers = DatabaseManager.getMarkers();
+
+        // Percorre todos os markers
         while(markers.moveToNext())
         {
             String title = markers.getString(0);
@@ -217,34 +240,48 @@ public class MainActivity extends AppCompatActivity
             double latitude = markers.getDouble(2);
             double longitude = markers.getDouble(3);
 
+            // Posiciona o marker no mapa
             placeMarker(title,subtitle,latitude,longitude);
         }
     }
 
     private void placeMarker(String title, String subtitle, double latitude, double longitude)
     {
+        // É criado um marker
         Marker m = new Marker(map);
+
+        // As propriedades são atribuídas ao marker
         m.setPosition(new GeoPoint(latitude,longitude));
         m.setTitle(title);
         m.setSubDescription(subtitle);
+
+        // Posiciona o marker no mapa
         map.getOverlays().add(m);
     }
 
     private void placeMarkers(JSONArray markers)
     {
+        // O mapa é limpo
         map.getOverlays().clear();
+
+        // Percorre todos os markers
         for(int i = 0; i < markers.length(); i++)
         {
             try
             {
+                // Obtém um marker
                 JSONObject marker = markers.getJSONObject(i);
 
+                // Obtém as propriedades desse marker
                 String title = marker.getString("title");
                 String subtitle = marker.getString("subtitle");
                 double latitude = marker.getDouble("latitude");
                 double longitude = marker.getDouble("longitude");
 
+                // Insere o marker na base de dados (local)
                 DatabaseManager.insertMarker(title,subtitle,latitude,longitude);
+
+                // O marker é colocado no mapa
                 placeMarker(title,subtitle,latitude,longitude);
             }
             catch (JSONException e)

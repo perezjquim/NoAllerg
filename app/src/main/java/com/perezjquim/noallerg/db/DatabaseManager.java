@@ -40,10 +40,11 @@ public abstract class DatabaseManager
 
     private static void createDatabase()
     {
-        db.execSQL("CREATE TABLE IF NOT EXISTS " + MARKER_TABLE + " ("+
-                                 "  `id` INTEGER NOT NULL PRIMARY KEY," +
-                                 "`title` VARCHAR(45) NOT NULL," +
-                                 "`subtitle` VARCHAR(45) NOT NULL,"+
+        db.execSQL("CREATE TABLE IF NOT EXISTS " + MARKER_TABLE + 
+        		      " ("+
+                                "`id` INTEGER NOT NULL PRIMARY KEY," +
+                                "`title` VARCHAR(45) NOT NULL," +
+                                "`subtitle` VARCHAR(45) NOT NULL,"+
                                 "`latitude` DOUBLE NOT NULL,"+
                                 "`longitude` DOUBLE NOT NULL"+
                                 ")");
@@ -80,6 +81,7 @@ public abstract class DatabaseManager
 
     public static Cursor getMarkers()
     {
-        return db.rawQuery("SELECT title,subtitle,latitude,longitude FROM marker",null);
+    	// Obtém os markers
+    	return db.rawQuery("SELECT title,subtitle,latitude,longitude FROM marker",null);
     }
 }
