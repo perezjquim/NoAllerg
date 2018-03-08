@@ -240,8 +240,8 @@ public class MainActivity extends AppCompatActivity
 
                 String title = marker.getString("title");
                 String subtitle = marker.getString("subtitle");
-                double latitude = marker.getDouble("lat");
-                double longitude = marker.getDouble("long");
+                double latitude = marker.getDouble("latitude");
+                double longitude = marker.getDouble("longitude");
 
                 DatabaseManager.insertMarker(title,subtitle,latitude,longitude);
 

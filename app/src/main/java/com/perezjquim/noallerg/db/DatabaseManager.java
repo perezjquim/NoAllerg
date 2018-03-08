@@ -11,8 +11,6 @@ public abstract class DatabaseManager
 {
     private static final String DB_NAME = "noallerg";
     private static final String MARKER_TABLE = "marker";
-    private static final String MARKER_COOR_TABLE = "marker_coor";
-    private static final String MARKER_INFO_TABLE = "marker_info";
     private static SQLiteDatabase db;
 
     public static void initDatabase()
@@ -43,49 +41,28 @@ public abstract class DatabaseManager
     private static void createDatabase()
     {
         db.execSQL("CREATE TABLE IF NOT EXISTS " + MARKER_TABLE + " ("+
-                                 "  `id` INTEGER NOT NULL PRIMARY KEY)");
-
-        db.execSQL("CREATE TABLE IF NOT EXISTS " + MARKER_COOR_TABLE + " ("+
-                                "`marker_id` INTEGER NOT NULL PRIMARY KEY,"+
-                                "`lat` DOUBLE NOT NULL,"+
-                                "`long` DOUBLE NOT NULL,"+
-                                "FOREIGN KEY (`marker_id`)"+
-                                "REFERENCES `marker` (`id`)"+
+                                 "  `id` INTEGER NOT NULL PRIMARY KEY," +
+                                 "`title` VARCHAR(45) NOT NULL," +
+                                 "`subtitle` VARCHAR(45) NOT NULL,"+
+                                "`latitude` DOUBLE NOT NULL,"+
+                                "`longitude` DOUBLE NOT NULL"+
                                 ")");
-
-        db.execSQL("CREATE TABLE IF NOT EXISTS " + MARKER_INFO_TABLE + " ("+
-                "`marker_id` INTEGER NOT NULL PRIMARY KEY,"+
-                "`title` VARCHAR(45) NOT NULL,"+
-                "`subtitle` VARCHAR(45) NOT NULL,"+
-                "FOREIGN KEY (`marker_id`)"+
-                "REFERENCES `marker` (`id`)"+
-                ")");
     }
 
     public static void clearDatabase()
     {
         db.execSQL("DELETE FROM " + MARKER_TABLE);
-        db.execSQL("DELETE FROM " + MARKER_COOR_TABLE);
-        db.execSQL("DELETE FROM " + MARKER_INFO_TABLE);
     }
 
     public static void insertMarker(String title, String subtitle, double latitude, double longitude)
     {
-        db.beginTransaction();
         try
         {
-            insert("INSERT INTO " + MARKER_TABLE +" VALUES (NULL)");
-            insert("INSERT INTO " + MARKER_COOR_TABLE +" (lat,long) VALUES (?,?)",""+latitude,""+longitude);
-            insert("INSERT INTO " + MARKER_INFO_TABLE +" (title,subtitle) VALUES (?,?)",title,subtitle);
-            db.setTransactionSuccessful();
+            insert("INSERT INTO " + MARKER_TABLE +" (title,subtitle,latitude,longitude) VALUES (?,?,?,?)",title,subtitle,""+latitude,""+longitude);
         }
         catch(InsertFailedException e)
         {
             e.printStackTrace();
-        }
-        finally
-        {
-            db.endTransaction();
         }
     }
 
@@ -103,6 +80,6 @@ public abstract class DatabaseManager
 
     public static Cursor getMarkers()
     {
-        return db.rawQuery("SELECT title,subtitle,lat,long FROM marker_coor,marker_info WHERE marker_coor.marker_id=marker_info.marker_id",null);
+        return db.rawQuery("SELECT title,subtitle,latitude,longitude FROM marker",null);
     }
 }
