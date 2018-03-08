@@ -17,7 +17,7 @@ public abstract class DatabaseManager
     {
         try
         {
-            File dbFolder = new File(Environment.getExternalStorageDirectory(), "/noallerg");
+            File dbFolder = new File(Environment.getExternalStorageDirectory(), "/"+DB_NAME);
             if(!dbFolder.exists())
             {
                 if (!dbFolder.mkdir())
@@ -29,7 +29,7 @@ public abstract class DatabaseManager
                 dbFile.createNewFile();
             }
             db = SQLiteDatabase.openDatabase(
-                    Environment.getExternalStorageDirectory() + "/noallerg/" + DB_NAME,
+                    Environment.getExternalStorageDirectory() + "/"+DB_NAME+"/" + DB_NAME,
                     null,
                     SQLiteDatabase.CREATE_IF_NECESSARY);
             createDatabase();
