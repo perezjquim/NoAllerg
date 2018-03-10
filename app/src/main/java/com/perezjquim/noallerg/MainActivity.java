@@ -9,7 +9,11 @@ import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
+import com.android.volley.NetworkError;
+import com.android.volley.NoConnectionError;
+import com.android.volley.ParseError;
 import com.android.volley.RequestQueue;
+import com.android.volley.TimeoutError;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -26,10 +30,13 @@ import org.osmdroid.config.Configuration;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
-import org.osmdroid.views.overlay.OverlayItem;
 
-import java.util.ArrayList;
-
+import static com.perezjquim.noallerg.ToastMessages.GPS_ERROR;
+import static com.perezjquim.noallerg.ToastMessages.NETWORK_ERROR;
+import static com.perezjquim.noallerg.ToastMessages.PARSING_ERROR;
+import static com.perezjquim.noallerg.ToastMessages.UNHANDLED_ERROR;
+import static com.perezjquim.noallerg.ToastMessages.UPDATE_MARKERS_INIT;
+import static com.perezjquim.noallerg.ToastMessages.UPDATE_MARKERS_SUCCESS;
 import static com.perezjquim.noallerg.util.UI.toast;
 
 public class MainActivity extends AppCompatActivity
@@ -38,6 +45,8 @@ public class MainActivity extends AppCompatActivity
     private IMapController mapController;
     private PermissionChecker permissionChecker;
     private SharedPreferencesHelper prefs;
+
+    private static final String GET_MARKERS_URL = "http://www.noallerg.x10host.com/markers.php/";
 
     // Constantes (Mapa)
     private static final double MAP_DEFAULT_LAT = 39;
@@ -153,7 +162,7 @@ public class MainActivity extends AppCompatActivity
                         }
                         else
                         {
-                            toast(this, "An error occured (make sure GPS is enabled)");
+                            toast(this, GPS_ERROR.message);
                         }
                     });
         }).start();
@@ -163,20 +172,28 @@ public class MainActivity extends AppCompatActivity
     {
         new Thread(()->
         {
-            toast(this,"Refreshing data..");
+            toast(this,UPDATE_MARKERS_INIT.message);
             // Atualiza os marcadores
-            Http.doGetRequest("http://www.noallerg.x10host.com/markers.php/",
+            Http.doGetRequest(GET_MARKERS_URL,
                     response ->
                     {
                         DatabaseManager.clearDatabase();
                         placeMarkers(response);
                         map.invalidate();
-                        toast(this,"Done refreshing!");
+                        toast(this,UPDATE_MARKERS_SUCCESS.message);
                     },
                     error ->
                     {
+                        if(error instanceof TimeoutError || error instanceof NoConnectionError || error instanceof NetworkError)
+                        { toast(this,NETWORK_ERROR.message); }
+                        else
+                        {
+                            if(error instanceof ParseError)
+                            { toast(this, PARSING_ERROR.message); }
+                            else
+                            { toast(this, UNHANDLED_ERROR.message); }
+                        }
                         System.err.println(error.toString());
-                        toast(this,"An error occured (make sure you have an internet connection)");
                     },
                     queue
             );
