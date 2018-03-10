@@ -11,6 +11,21 @@ public abstract class DatabaseManager
 {
     private static final String DB_NAME = "noallerg";
     private static final String MARKER_TABLE = "marker";
+    private static final String SQL_CREATE_DB =
+            "CREATE TABLE IF NOT EXISTS " + MARKER_TABLE +
+            " ("+
+            "`id` INTEGER NOT NULL PRIMARY KEY," +
+            "`title` VARCHAR(45) NOT NULL," +
+            "`subtitle` VARCHAR(45) NOT NULL,"+
+            "`latitude` DOUBLE NOT NULL,"+
+            "`longitude` DOUBLE NOT NULL"+
+            ")";
+    private static final String SQL_CLEAR_DB =
+            "DELETE FROM " + MARKER_TABLE;
+    private static final String SQL_INSERT_MARKER =
+            "INSERT INTO " + MARKER_TABLE +" (title,subtitle,latitude,longitude) VALUES (?,?,?,?)";
+    private static final String SQL_GET_MARKERS =
+            "SELECT title,subtitle,latitude,longitude FROM marker";
     private static SQLiteDatabase db;
 
     public static void initDatabase()
@@ -40,26 +55,19 @@ public abstract class DatabaseManager
 
     private static void createDatabase()
     {
-        db.execSQL("CREATE TABLE IF NOT EXISTS " + MARKER_TABLE + 
-        		      " ("+
-                                "`id` INTEGER NOT NULL PRIMARY KEY," +
-                                "`title` VARCHAR(45) NOT NULL," +
-                                "`subtitle` VARCHAR(45) NOT NULL,"+
-                                "`latitude` DOUBLE NOT NULL,"+
-                                "`longitude` DOUBLE NOT NULL"+
-                                ")");
+        db.execSQL(SQL_CREATE_DB);
     }
 
     public static void clearDatabase()
     {
-        db.execSQL("DELETE FROM " + MARKER_TABLE);
+        db.execSQL(SQL_CLEAR_DB);
     }
 
     public static void insertMarker(String title, String subtitle, double latitude, double longitude)
     {
         try
         {
-            insert("INSERT INTO " + MARKER_TABLE +" (title,subtitle,latitude,longitude) VALUES (?,?,?,?)",title,subtitle,""+latitude,""+longitude);
+            insert(SQL_INSERT_MARKER,title,subtitle,""+latitude,""+longitude);
         }
         catch(InsertFailedException e)
         {
@@ -67,10 +75,10 @@ public abstract class DatabaseManager
         }
     }
 
-    public static void beginTransaction()
+    private static void beginTransaction()
     { db.beginTransaction(); }
 
-    public static void insert(String sql, String ... args) throws InsertFailedException
+    private static void insert(String sql, String ... args) throws InsertFailedException
     {
         SQLiteStatement statement = db.compileStatement(sql);
         statement.bindAllArgsAsStrings(args);
@@ -82,6 +90,6 @@ public abstract class DatabaseManager
     public static Cursor getMarkers()
     {
     	// Obtém os markers
-    	return db.rawQuery("SELECT title,subtitle,latitude,longitude FROM marker",null);
+    	return db.rawQuery(SQL_GET_MARKERS,null);
     }
 }
