@@ -18,9 +18,9 @@ import com.android.volley.toolbox.Volley;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.perezjquim.library.PermissionChecker;
+import com.perezjquim.library.SharedPreferencesHelper;
 import com.perezjquim.noallerg.db.DatabaseManager;
 import com.perezjquim.noallerg.util.Http;
-import com.perezjquim.noallerg.util.SharedPreferencesHelper;
 
 import org.json.JSONArray;
 import org.json.JSONException;
