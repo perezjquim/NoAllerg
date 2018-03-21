@@ -17,8 +17,8 @@ import com.android.volley.TimeoutError;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
-import com.perezjquim.library.PermissionChecker;
-import com.perezjquim.library.SharedPreferencesHelper;
+import com.perezjquim.PermissionChecker;
+import com.perezjquim.SharedPreferencesHelper;
 import com.perezjquim.noallerg.db.DatabaseManager;
 import com.perezjquim.noallerg.util.Http;
 
@@ -37,7 +37,7 @@ import static com.perezjquim.noallerg.ToastMessages.PARSING_ERROR;
 import static com.perezjquim.noallerg.ToastMessages.UNHANDLED_ERROR;
 import static com.perezjquim.noallerg.ToastMessages.UPDATE_MARKERS_INIT;
 import static com.perezjquim.noallerg.ToastMessages.UPDATE_MARKERS_SUCCESS;
-import static com.perezjquim.uilhelper.UIHelper.toast;
+import static com.perezjquim.UIHelper.toast;
 
 public class MainActivity extends AppCompatActivity
 {
