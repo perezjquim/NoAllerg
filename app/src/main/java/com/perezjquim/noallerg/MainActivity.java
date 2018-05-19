@@ -31,13 +31,17 @@ import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 
+import static com.perezjquim.UIHelper.hideProgressDialog;
+import static com.perezjquim.UIHelper.showProgressDialog;
+import static com.perezjquim.UIHelper.toast;
 import static com.perezjquim.noallerg.ToastMessages.GPS_ERROR;
+import static com.perezjquim.noallerg.ToastMessages.GPS_INIT;
+import static com.perezjquim.noallerg.ToastMessages.GPS_SUCCESS;
 import static com.perezjquim.noallerg.ToastMessages.NETWORK_ERROR;
 import static com.perezjquim.noallerg.ToastMessages.PARSING_ERROR;
 import static com.perezjquim.noallerg.ToastMessages.UNHANDLED_ERROR;
 import static com.perezjquim.noallerg.ToastMessages.UPDATE_MARKERS_INIT;
 import static com.perezjquim.noallerg.ToastMessages.UPDATE_MARKERS_SUCCESS;
-import static com.perezjquim.UIHelper.toast;
 
 public class MainActivity extends AppCompatActivity
 {
@@ -151,19 +155,32 @@ public class MainActivity extends AppCompatActivity
     {
         new Thread(()->
         {
+            runOnUiThread(()->showProgressDialog(this, GPS_INIT.message));
+
             // Busca a localização atual e move o mapa para tal
             FusedLocationProviderClient location = LocationServices.getFusedLocationProviderClient(this);
-            location.getLastLocation()
+            location
+                    .getLastLocation()
                     .addOnSuccessListener(this, coordinates ->
                     {
                         if (coordinates != null)
                         {
                             moveTo(coordinates.getLatitude(), coordinates.getLongitude(),MAP_DEFAULT_ZOOM);
+                            runOnUiThread(()->hideProgressDialog());
+                            toast(this,GPS_SUCCESS.message);
                         }
                         else
                         {
+                            runOnUiThread(()->hideProgressDialog());
                             toast(this, GPS_ERROR.message);
                         }
+                    });
+            location
+                    .getLastLocation()
+                    .addOnFailureListener(this, coordinates ->
+                    {
+                        runOnUiThread(()->hideProgressDialog());
+                        toast(this, GPS_ERROR.message);
                     });
         }).start();
     }
@@ -172,7 +189,9 @@ public class MainActivity extends AppCompatActivity
     {
         new Thread(()->
         {
-            toast(this,UPDATE_MARKERS_INIT.message);
+            // toast(this,UPDATE_MARKERS_INIT.message);
+            runOnUiThread(()->showProgressDialog(this,UPDATE_MARKERS_INIT.message));
+
             // Atualiza os marcadores
             Http.doGetRequest(GET_MARKERS_URL,
                     response ->
@@ -180,10 +199,12 @@ public class MainActivity extends AppCompatActivity
                         DatabaseManager.clearDatabase();
                         placeMarkers(response);
                         map.invalidate();
+                        runOnUiThread(()->hideProgressDialog());
                         toast(this,UPDATE_MARKERS_SUCCESS.message);
                     },
                     error ->
                     {
+                        runOnUiThread(()->hideProgressDialog());
                         if(error instanceof TimeoutError || error instanceof NoConnectionError || error instanceof NetworkError)
                         { toast(this,NETWORK_ERROR.message); }
                         else
