@@ -31,8 +31,8 @@ import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 
-import static com.perezjquim.UIHelper.hideProgressDialog;
-import static com.perezjquim.UIHelper.showProgressDialog;
+import static com.perezjquim.UIHelper.closeProgressDialog;
+import static com.perezjquim.UIHelper.openProgressDialog;
 import static com.perezjquim.UIHelper.toast;
 import static com.perezjquim.noallerg.ToastMessages.GPS_ERROR;
 import static com.perezjquim.noallerg.ToastMessages.GPS_INIT;
@@ -47,7 +47,6 @@ public class MainActivity extends AppCompatActivity
 {
     private MapView map;
     private IMapController mapController;
-    private PermissionChecker permissionChecker;
     private SharedPreferencesHelper prefs;
 
     private static final String GET_MARKERS_URL = "http://www.noallerg.x10host.com/markers.php/";
@@ -69,21 +68,12 @@ public class MainActivity extends AppCompatActivity
     public void onCreate(Bundle savedInstance)
     {
         super.onCreate(savedInstance);
-        initPermissionChecker();
+        PermissionChecker.init(this);
         DatabaseManager.initDatabase();
         Configuration.getInstance().load(getApplicationContext(), PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
         setContentView(R.layout.activity_main);
         initMap();
         queue = Volley.newRequestQueue(this);
-    }
-
-    private void initPermissionChecker()
-    {
-        if (Build.VERSION.SDK_INT >= 23)
-        {
-            permissionChecker = new PermissionChecker(this);
-            permissionChecker.start();
-        }
     }
 
     private void initMap()
@@ -110,7 +100,7 @@ public class MainActivity extends AppCompatActivity
         switch(requestCode)
         {
             case PermissionChecker.REQUEST_CODE:
-                permissionChecker.restart();
+                PermissionChecker.restart();
         }
     }
 
@@ -155,7 +145,7 @@ public class MainActivity extends AppCompatActivity
     {
         new Thread(()->
         {
-            runOnUiThread(()->showProgressDialog(this, GPS_INIT.message));
+            runOnUiThread(()->openProgressDialog(this, GPS_INIT.message));
 
             // Busca a localização atual e move o mapa para tal
             FusedLocationProviderClient location = LocationServices.getFusedLocationProviderClient(this);
@@ -166,12 +156,12 @@ public class MainActivity extends AppCompatActivity
                         if (coordinates != null)
                         {
                             moveTo(coordinates.getLatitude(), coordinates.getLongitude(),MAP_DEFAULT_ZOOM);
-                            runOnUiThread(()->hideProgressDialog());
+                            runOnUiThread(()->closeProgressDialog());
                             toast(this,GPS_SUCCESS.message);
                         }
                         else
                         {
-                            runOnUiThread(()->hideProgressDialog());
+                            runOnUiThread(()->closeProgressDialog());
                             toast(this, GPS_ERROR.message);
                         }
                     });
@@ -179,7 +169,7 @@ public class MainActivity extends AppCompatActivity
                     .getLastLocation()
                     .addOnFailureListener(this, coordinates ->
                     {
-                        runOnUiThread(()->hideProgressDialog());
+                        runOnUiThread(()->closeProgressDialog());
                         toast(this, GPS_ERROR.message);
                     });
         }).start();
@@ -190,7 +180,7 @@ public class MainActivity extends AppCompatActivity
         new Thread(()->
         {
             // toast(this,UPDATE_MARKERS_INIT.message);
-            runOnUiThread(()->showProgressDialog(this,UPDATE_MARKERS_INIT.message));
+            runOnUiThread(()->openProgressDialog(this,UPDATE_MARKERS_INIT.message));
 
             // Atualiza os marcadores
             Http.doGetRequest(GET_MARKERS_URL,
@@ -199,12 +189,12 @@ public class MainActivity extends AppCompatActivity
                         DatabaseManager.clearDatabase();
                         placeMarkers(response);
                         map.invalidate();
-                        runOnUiThread(()->hideProgressDialog());
+                        runOnUiThread(()->closeProgressDialog());
                         toast(this,UPDATE_MARKERS_SUCCESS.message);
                     },
                     error ->
                     {
-                        runOnUiThread(()->hideProgressDialog());
+                        runOnUiThread(()->closeProgressDialog());
                         if(error instanceof TimeoutError || error instanceof NoConnectionError || error instanceof NetworkError)
                         { toast(this,NETWORK_ERROR.message); }
                         else
