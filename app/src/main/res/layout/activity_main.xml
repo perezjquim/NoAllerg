@@ -12,23 +12,25 @@
         android:layout_height="wrap_content" />
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/btnCurr"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="end|bottom"
+        android:layout_gravity="right|bottom"
         android:layout_margin="20dp"
-        android:tint="@android:color/background_light"
-        app:srcCompat="@android:drawable/ic_menu_mylocation"
+        android:tint="@android:color/white"
+        android:scaleType="center"
+        android:src="@android:drawable/ic_menu_mylocation"
+        app:backgroundTint="@color/colorPrimary"
         android:onClick="goCurrent"/>
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/btnRefresh"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="start|bottom"
+        android:layout_gravity="left|bottom"
         android:layout_margin="20dp"
         android:onClick="refreshPoints"
-        android:tint="@android:color/background_light"
-        app:srcCompat="@drawable/quantum_ic_refresh_white_24" />
+        android:tint="@android:color/white"
+        android:src="@android:drawable/stat_notify_sync_noanim"
+        android:scaleType="center"
+        app:backgroundTint="@color/colorPrimary"/>
 
 </android.support.design.widget.CoordinatorLayout>

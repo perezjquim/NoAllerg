@@ -3,24 +3,21 @@ package com.perezjquim.noallerg;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.database.Cursor;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Base64;
 import android.view.View;
 
-import com.android.volley.NetworkError;
-import com.android.volley.NoConnectionError;
-import com.android.volley.ParseError;
-import com.android.volley.RequestQueue;
-import com.android.volley.TimeoutError;
-import com.android.volley.toolbox.Volley;
+import com.androidnetworking.AndroidNetworking;
+import com.androidnetworking.common.Priority;
+import com.androidnetworking.error.ANError;
+import com.androidnetworking.interfaces.JSONArrayRequestListener;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.perezjquim.PermissionChecker;
 import com.perezjquim.SharedPreferencesHelper;
 import com.perezjquim.noallerg.db.DatabaseManager;
-import com.perezjquim.noallerg.util.Http;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -37,9 +34,6 @@ import static com.perezjquim.UIHelper.toast;
 import static com.perezjquim.noallerg.ToastMessages.GPS_ERROR;
 import static com.perezjquim.noallerg.ToastMessages.GPS_INIT;
 import static com.perezjquim.noallerg.ToastMessages.GPS_SUCCESS;
-import static com.perezjquim.noallerg.ToastMessages.NETWORK_ERROR;
-import static com.perezjquim.noallerg.ToastMessages.PARSING_ERROR;
-import static com.perezjquim.noallerg.ToastMessages.UNHANDLED_ERROR;
 import static com.perezjquim.noallerg.ToastMessages.UPDATE_MARKERS_INIT;
 import static com.perezjquim.noallerg.ToastMessages.UPDATE_MARKERS_SUCCESS;
 
@@ -49,7 +43,7 @@ public class MainActivity extends AppCompatActivity
     private IMapController mapController;
     private SharedPreferencesHelper prefs;
 
-    private static final String GET_MARKERS_URL = "http://www.noallerg.x10host.com/markers.php/";
+    private static final String GET_MARKERS_URL = "http://noallerg.herokuapp.com/markers";
 
     // Constantes (Mapa)
     private static final double MAP_DEFAULT_LAT = 39;
@@ -62,25 +56,27 @@ public class MainActivity extends AppCompatActivity
     private static final String PREFS_COORDS_LAT ="lat";
     private static final String PREFS_COORDS_LONG = "long";
     private static final String PREFS_COORDS_ZOOM = "zoom";
-    private RequestQueue queue;
 
     @Override
     public void onCreate(Bundle savedInstance)
     {
         super.onCreate(savedInstance);
+
         PermissionChecker.init(this);
         DatabaseManager.initDatabase();
         Configuration.getInstance().load(getApplicationContext(), PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
+        AndroidNetworking.initialize(getApplicationContext());
         setContentView(R.layout.activity_main);
         initMap();
-        queue = Volley.newRequestQueue(this);
+
+        super.setTheme(R.style.Theme_AppCompat);
     }
 
     private void initMap()
     {
         // Inicialização do mapa e as suas configurações
         prefs = new SharedPreferencesHelper(this);     
-        map = findViewById(R.id.map);
+        map = (MapView) findViewById(R.id.map);
         map.setBuiltInZoomControls(false);
         map.setMultiTouchControls(true);
         map.setMinZoomLevel(MAP_MIN_ZOOM);
@@ -145,7 +141,7 @@ public class MainActivity extends AppCompatActivity
     {
         new Thread(()->
         {
-            runOnUiThread(()->openProgressDialog(this, GPS_INIT.message));
+            openProgressDialog(this, GPS_INIT.message);
 
             // Busca a localização atual e move o mapa para tal
             FusedLocationProviderClient location = LocationServices.getFusedLocationProviderClient(this);
@@ -156,12 +152,12 @@ public class MainActivity extends AppCompatActivity
                         if (coordinates != null)
                         {
                             moveTo(coordinates.getLatitude(), coordinates.getLongitude(),MAP_DEFAULT_ZOOM);
-                            runOnUiThread(()->closeProgressDialog());
+                            closeProgressDialog();
                             toast(this,GPS_SUCCESS.message);
                         }
                         else
                         {
-                            runOnUiThread(()->closeProgressDialog());
+                            closeProgressDialog();
                             toast(this, GPS_ERROR.message);
                         }
                     });
@@ -169,7 +165,7 @@ public class MainActivity extends AppCompatActivity
                     .getLastLocation()
                     .addOnFailureListener(this, coordinates ->
                     {
-                        runOnUiThread(()->closeProgressDialog());
+                        closeProgressDialog();
                         toast(this, GPS_ERROR.message);
                     });
         }).start();
@@ -180,34 +176,33 @@ public class MainActivity extends AppCompatActivity
         new Thread(()->
         {
             // toast(this,UPDATE_MARKERS_INIT.message);
-            runOnUiThread(()->openProgressDialog(this,UPDATE_MARKERS_INIT.message));
+            openProgressDialog(this,UPDATE_MARKERS_INIT.message);
 
             // Atualiza os marcadores
-            Http.doGetRequest(GET_MARKERS_URL,
-                    response ->
-                    {
-                        DatabaseManager.clearDatabase();
-                        placeMarkers(response);
-                        map.invalidate();
-                        runOnUiThread(()->closeProgressDialog());
-                        toast(this,UPDATE_MARKERS_SUCCESS.message);
-                    },
-                    error ->
-                    {
-                        runOnUiThread(()->closeProgressDialog());
-                        if(error instanceof TimeoutError || error instanceof NoConnectionError || error instanceof NetworkError)
-                        { toast(this,NETWORK_ERROR.message); }
-                        else
+            String credentials = "perezjquim" + ":" + "1234";
+            String eCredencials = Base64.encodeToString(credentials.getBytes(), Base64.NO_WRAP);
+            AndroidNetworking.get(GET_MARKERS_URL)
+                    .addHeaders("Authorization", "Basic " + eCredencials)
+                    .setTag("test")
+                    .setPriority(Priority.LOW)
+                    .build()
+                    .getAsJSONArray(new JSONArrayRequestListener() {
+                        @Override
+                        public void onResponse(JSONArray response)
                         {
-                            if(error instanceof ParseError)
-                            { toast(this, PARSING_ERROR.message); }
-                            else
-                            { toast(this, UNHANDLED_ERROR.message); }
+                            DatabaseManager.clearDatabase();
+                            placeMarkers(response);
+                            map.invalidate();
+                            closeProgressDialog();
+                            toast(getApplicationContext(),UPDATE_MARKERS_SUCCESS.message);
                         }
-                        System.err.println(error.toString());
-                    },
-                    queue
-            );
+                        @Override
+                        public void onError(ANError error)
+                        {
+                            closeProgressDialog();
+                            toast(getApplicationContext(),error.getErrorDetail());
+                        }
+                    });
         }).start();
     }
 

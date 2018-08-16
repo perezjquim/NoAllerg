@@ -17,7 +17,7 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         WebStorage.getInstance().deleteAllData();
-        WebView web = findViewById(R.id.web);
+        WebView web = (WebView) findViewById(R.id.web);
         web.getSettings().setJavaScriptEnabled(true);
         web.loadUrl("http://noallerg.x10host.com/admin.php");
     }
