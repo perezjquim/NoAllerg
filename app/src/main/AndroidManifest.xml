@@ -11,6 +11,7 @@
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:configChanges="orientation"
         android:name="android.support.multidex.MultiDexApplication">
         <activity android:name=".MainActivity" android:theme="@style/splash">
             <intent-filter>

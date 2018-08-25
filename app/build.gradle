@@ -21,7 +21,9 @@ android {
         sourceCompatibility 1.8
     }
 }
-
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'org.osmdroid:osmdroid-android:6.0.1'
@@ -30,7 +32,7 @@ dependencies {
     implementation 'com.android.support:multidex:1.0.3'
     implementation 'com.amitshekhar.android:android-networking:1.0.2'
     implementation 'com.github.perezjquim:permissionchecker:master-SNAPSHOT'
-    implementation 'com.github.perezjquim:uihelper:master-SNAPSHOT'
+    implementation ('com.github.perezjquim:uihelper:master-SNAPSHOT') { changing = true  }
     implementation 'com.github.perezjquim:sharedprefhelper:master-SNAPSHOT'
 }
 

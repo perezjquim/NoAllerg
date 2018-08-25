@@ -61,6 +61,7 @@ public class MainActivity extends AppCompatActivity
     public void onCreate(Bundle savedInstance)
     {
         super.onCreate(savedInstance);
+        super.setTheme(R.style.AppTheme);
 
         PermissionChecker.init(this);
         DatabaseManager.initDatabase();
@@ -68,8 +69,6 @@ public class MainActivity extends AppCompatActivity
         AndroidNetworking.initialize(getApplicationContext());
         setContentView(R.layout.activity_main);
         initMap();
-
-        super.setTheme(R.style.Theme_AppCompat);
     }
 
     private void initMap()
